@@ -1,0 +1,57 @@
+# Packages used
+import tweepy
+import time
+
+# API keys
+auth = tweepy.OAuthHandler('API Key', 'API Key Secret')
+auth.set_access_token('Access Token',
+                      'Access Token Secret')
+# API Authorization
+api = tweepy.API(auth)
+
+FILE_NAME = 'user_id.txt'
+
+def retrieve_last_seen_id(FILE_NAME):
+    f_read = open(FILE_NAME, 'r')
+    last_seen_id = f_read.read().strip()
+    f_read.close()
+    return last_seen_id
+
+def store_last_seen_id(last_seen_id, FILE_NAME):
+    f_write = open(FILE_NAME, 'w')
+    f_write.write(str(last_seen_id))
+    f_write.close()
+    return
+
+last_seen_id = retrieve_last_seen_id(FILE_NAME)
+
+
+def main():
+    my_followers = api.followers('your twitter username')
+    columns = set()
+    allowed_types = [str, int]
+    followers_data = []
+    for user in my_followers :
+        user_dict = dict(vars(user))
+        keys = user_dict.keys()
+        single_user_data = {}
+        for k in keys:
+            v_type = type(user_dict[k])
+            if v_type in allowed_types:
+                single_user_data[k] = user_dict[k]
+                columns.add(k)
+        followers_data.append(single_user_data)
+
+    user_screenid = followers_data[0]['id_str']  # set equal to the current latest follow's id
+    user_screename = followers_data[0]['screen_name']
+    if last_seen_id != user_screenid :
+        store_last_seen_id(user_screenid, FILE_NAME)
+        api.send_direct_message(user_screenid, 'Thak you for following! (This action was performed by a bot, please ignore.')
+    else:
+        pass
+
+
+# Script our program
+while True:
+    main()
+    time.sleep(30)
